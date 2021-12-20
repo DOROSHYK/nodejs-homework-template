@@ -1,5 +1,5 @@
 const express = require('express');
-// const { NotFound, BadRequest } = require('http-errors')
+const { NotFound, BadRequest } = require('http-errors')
 // const { status } = require('express/lib/response');
 // const { json } = require('express/lib/response');
 const router = express.Router()
@@ -20,10 +20,10 @@ router.get('/', async (_, res, next) => {
   res.json(contacts);
    }
   catch (error) {
-    // next(error);
-    res.status(500).json({
-      message: "Server error"
-    })
+    next(error);
+    // res.status(500).json({
+    //   message: "Server error"
+    // })
   }
   
 })
@@ -35,28 +35,36 @@ router.get('/:contactId', async (req, res, next) => {
     const result = await contactsOperations.getContactById(contactId);
     
     if (!result) {
-      // throw new NotFound('Contact not found'); 
-      const error = new Error("Not found");
-      error.status = 404;
-      throw error;
-      // return res.status(404).json({
-      //   message: "Not found"
-      // })
-    
+      throw new NotFound('Contact not found'); 
+      // const error = new Error("Not found");
+      // error.status = 404;
+      // throw error;
+     
     }
     res.json(result);
   } 
   catch (error) {
-    // next(error);
-    const { status = 500, message = "Server error" } = error;
-     res.status(status).json({
-      message
-    })
-  }
+    next(error);
+  //   const { status = 500, message = "Server error" } = error;
+  //    res.status(status).json({
+  //     message
+  //   })
+   }
 })
 
 router.post('/', async (req, res, next) => {
-  res.json({ message: 'template message' })
+  try {
+    const { error } = joiSchema.validate(req.body);
+    if (error) {
+      throw new BadRequest(error.message);
+      // error.status = 400;
+      // throw error;
+    }
+    const result = await contactsOperations.addContact(req.body)
+    res.status(201).json(result);
+   } catch (error) {
+    next(error); 
+  }
 })
 
 router.delete('/:contactId', async (req, res, next) => {
