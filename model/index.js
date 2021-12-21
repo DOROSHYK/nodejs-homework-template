@@ -52,14 +52,14 @@ const addContact = async ({ name, email, phone }) => {
   return newContact;
 }
 
-const updateContact = async (contactId, body) => {
+const updateContact = async ({contactId,name, email, phone}) => {
   const contacts = await listContacts()
   const idx = contacts.findIndex(item => String(item.id) === String(contactId))
 
   if (idx === -1) {
     return null
   }
-  contacts[idx] = { ...body, contactId };
+  contacts[idx] = {  contactId,name, email, phone};
     await fs.writeFile(contactsPath, JSON.stringify(contacts))
   return contacts[idx]
 }

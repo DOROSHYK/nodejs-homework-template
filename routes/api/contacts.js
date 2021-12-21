@@ -1,9 +1,7 @@
 const express = require('express');
-const { NotFound, BadRequest } = require('http-errors')
-// const { status } = require('express/lib/response');
-// const { json } = require('express/lib/response');
-const router = express.Router()
-const Joi = require('joi')
+const { NotFound, BadRequest } = require('http-errors');
+const router = express.Router();
+const Joi = require('joi');
 const contactsOperations = require("../../model/index");
 
 
@@ -31,14 +29,12 @@ router.get('/', async (_, res, next) => {
 router.get('/:contactId', async (req, res, next) => {
  const { contactId } = req.params;
   try {
-    // console.log(contactId)
+   
     const result = await contactsOperations.getContactById(contactId);
     
     if (!result) {
       throw new NotFound('Contact not found'); 
-      // const error = new Error("Not found");
-      // error.status = 404;
-      // throw error;
+    
      
     }
     res.json(result);
@@ -51,6 +47,7 @@ router.get('/:contactId', async (req, res, next) => {
   //   })
    }
 })
+
 
 router.post('/', async (req, res, next) => {
   try {
@@ -67,12 +64,42 @@ router.post('/', async (req, res, next) => {
   }
 })
 
+
 router.delete('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
+  try {
+    const { contactId } = req.params;
+    const result = await contactsOperations.removeContact(contactId);
+    if (!result) {
+      throw new NotFound(`Contact with id=${contactId} not found`);
+    }
+    res.json({"message": "contact deleted"})
+    // res.json(result)
+  } catch (error) {
+    next(error);
+  }
 })
 
-router.patch('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
+
+
+router.put('/:contactId', async (req, res, next) => {
+  try {
+    
+     const { error } = joiSchema.validate(req.body);
+    if (error) {
+      throw new BadRequest(error.message);
+      // error.status = 400;
+      // throw error;
+    }
+    const { contactId } = req.params;
+    const result = await contactsOperations.updateContact({ contactId, ...req.body} );
+    if (!result) {
+      throw new NotFound(`Contact with id=${contactId} not found`);
+    }
+    res.json(result);
+  } catch (error) {
+    next(error);
+   }
+  
 })
 
 module.exports = router
