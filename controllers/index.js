@@ -72,8 +72,4 @@ module.exports = {
   updateContact,
 }
 
-// const Contact = require("./contacts");
 
-// module.exports = {
-//   Contact
-// };

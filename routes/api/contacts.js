@@ -1,8 +1,11 @@
 const express = require('express');
 const { NotFound, BadRequest } = require('http-errors');
-const router = express.Router();
 const Joi = require('joi');
+
+const router = express.Router();
+
 const { Contact } = require("../../model/contacts");
+const {authenticate} = require('../../middlewares/authenticate')
 
 const joiSchema = Joi.object({
   name: Joi.string().required(),
@@ -46,8 +49,10 @@ router.get('/:contactId', async (req, res, next) => {
 })
 
 
-router.post('/', async (req, res, next) => {
+router.post('/', authenticate, async (req, res, next) => {
+  console.log(req.user);
   try {
+
     const { error } = joiSchema.validate(req.body);
     if (error) {
       throw new BadRequest(error.message);
