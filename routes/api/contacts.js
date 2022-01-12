@@ -13,10 +13,14 @@ const joiSchema = Joi.object({
   phone: Joi.string().required(),
 })
 
-router.get('/', async (_, res, next) => {
+router.get('/', authenticate, async (req, res, next) => {
 
   try {
-    const contacts = await Contact.find();
+    const { page, limit } = req.query;
+    const skip = (page - 1) * limit; 
+    // console.log(req.query);
+    const {_id} = req.user
+    const contacts = await Contact.find({owner: _id}, " -createdAt, -updatedAt ", {skip, limit: +limit});
   res.json(contacts);
    }
   catch (error) {
@@ -58,7 +62,8 @@ router.post('/', authenticate, async (req, res, next) => {
       throw new BadRequest(error.message);
      
     }
-    const result = await Contact.create(req.body)
+    const { _id } = req.user;
+    const result = await Contact.create({...req.body, owner: _id})
     res.status(201).json(result);
   } catch (error) {
     if (error.message.includes('validation failed')) {
