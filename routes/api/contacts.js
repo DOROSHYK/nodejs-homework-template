@@ -1,8 +1,11 @@
 const express = require('express');
 const { NotFound, BadRequest } = require('http-errors');
-const router = express.Router();
 const Joi = require('joi');
+
+const router = express.Router();
+
 const { Contact } = require("../../model/contacts");
+const {authenticate} = require('../../middlewares/authenticate')
 
 const joiSchema = Joi.object({
   name: Joi.string().required(),
@@ -10,10 +13,14 @@ const joiSchema = Joi.object({
   phone: Joi.string().required(),
 })
 
-router.get('/', async (_, res, next) => {
+router.get('/', authenticate, async (req, res, next) => {
 
   try {
-    const contacts = await Contact.find();
+    const { page, limit } = req.query;
+    const skip = (page - 1) * limit; 
+    // console.log(req.query);
+    const {_id} = req.user
+    const contacts = await Contact.find({owner: _id}, " -createdAt, -updatedAt ", {skip, limit: +limit});
   res.json(contacts);
    }
   catch (error) {
@@ -46,14 +53,17 @@ router.get('/:contactId', async (req, res, next) => {
 })
 
 
-router.post('/', async (req, res, next) => {
+router.post('/', authenticate, async (req, res, next) => {
+  console.log(req.user);
   try {
+
     const { error } = joiSchema.validate(req.body);
     if (error) {
       throw new BadRequest(error.message);
      
     }
-    const result = await Contact.create(req.body)
+    const { _id } = req.user;
+    const result = await Contact.create({...req.body, owner: _id})
     res.status(201).json(result);
   } catch (error) {
     if (error.message.includes('validation failed')) {
