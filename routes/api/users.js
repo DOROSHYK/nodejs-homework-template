@@ -43,14 +43,14 @@ router.post('/login', async (req, res, next) => {
     if (error) {
       throw new BadRequest(error.message);
     }
-      const { email, password } = req.body;
+    const { email, password } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
       throw new Unauthorized("Email or password is wrong");
     }
     const passwordCompare = await bcrypt.compare(password, user.password);
     if (!passwordCompare) {
-       throw new Unauthorized("Email or password is wrong");
+      throw new Unauthorized("Email or password is wrong");
     }
     const payload = {
       id: user._id
@@ -70,6 +70,10 @@ router.post('/login', async (req, res, next) => {
   catch (error) {
     next(error)
   }
-})
+});
+
+
+
+
 
 module.exports = router;
