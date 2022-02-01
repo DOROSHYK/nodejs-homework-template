@@ -2,12 +2,14 @@ const express = require('express');
 const { BadRequest, Conflict, Unauthorized } = require('http-errors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const gravatar = require('gravatar');
 
 const { User } = require('../../model/user');
 const { joiSchema } = require('../../model/user');
 
 const router = express.Router();
 const { SECRET_KEY } = process.env;
+
 
 router.post('/signup', async (req, res, next) => {
   try {
@@ -22,7 +24,9 @@ router.post('/signup', async (req, res, next) => {
     }
     const salt = await bcrypt.genSalt(10)
     const hashPassword = await bcrypt.hash(password, salt);
-    const newUser = await User.create({ email, password: hashPassword });
+
+    const avatarURL = gravatar.url(email);
+    const newUser = await User.create({ email, password: hashPassword, avatarURL });
     res.status(201).json({
       user: {
         email: newUser.email,
@@ -43,14 +47,14 @@ router.post('/login', async (req, res, next) => {
     if (error) {
       throw new BadRequest(error.message);
     }
-      const { email, password } = req.body;
+    const { email, password } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
       throw new Unauthorized("Email or password is wrong");
     }
     const passwordCompare = await bcrypt.compare(password, user.password);
     if (!passwordCompare) {
-       throw new Unauthorized("Email or password is wrong");
+      throw new Unauthorized("Email or password is wrong");
     }
     const payload = {
       id: user._id
@@ -70,6 +74,10 @@ router.post('/login', async (req, res, next) => {
   catch (error) {
     next(error)
   }
-})
+});
+
+
+
+
 
 module.exports = router;
