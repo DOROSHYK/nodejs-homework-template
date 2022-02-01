@@ -36,13 +36,15 @@ router.patch('/avatars', authenticate, upload.single('avatar'), async (req, res)
   const changeSizeImg = await Jimp.read(tempUpload);
         changeSizeImg.resize(250, 250);
   await changeSizeImg.writeAsync(tempUpload);
-  
+
+  const { _id } = req.user;
+
   const [extension] = originalname.split('.').reverse();
-  const newFileName = `${req.user._id}.${extension}`;
+  const newFileName = `${_id}.${extension}`;
   const fileUpload = path.join(avatarsDir, newFileName);
   await fs.rename(tempUpload, fileUpload);
   const avatarURL = path.join('avatars', newFileName);
-  await  User.findByIdAndUpdate(req.user_id, { avatarURL }, { new: true });
+  await User.findByIdAndUpdate(_id,  avatarURL ,  {new: true });
   res.json({avatarURL});
 })
 
