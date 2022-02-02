@@ -2,12 +2,15 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs/promises');
 const Jimp = require('jimp');
-const { NotFound } = require('http-errors');
+const { NotFound, BadRequest } = require('http-errors');
+// const { nanoid } = require('nanoid');
 
 const { User } = require('../../model/user');
 const { authenticate } = require('../../middlewares/authenticate');
-const  upload  = require('../../middlewares/upload');
+const upload = require('../../middlewares/upload');
+const sendEmail = require('../../helpers/sendEmail');
 
+const { SITE_NAME } = process.env;
 
 const router = express.Router();
 
@@ -69,7 +72,27 @@ router.get('verify/:verificationToken', async (req, res, next) => {
 
 router.post('verify/', async (req, res, next) => {
   try {
+    const { email } = req.body;
+    if (!email) {
+      throw new BadRequest("missing required field email");
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new NotFound('User not found');
+    } if (user.verify) {
+      throw new BadRequest( "Verification has already been passed");
+    }
+
+    const { verificationToken } = user;
     
+     const data = {
+      to: email,
+      subject: 'Підтвердження email',
+      html:`<a target="_blank" href="${SITE_NAME}/users/verify/${verificationToken}"> Підтвердити </a>`,
+    }
+    await sendEmail(data);
+    res.json({ "message": "Verification email sent"})
   }
   catch (error) {
     next(error);
